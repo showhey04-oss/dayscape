@@ -1,5 +1,65 @@
 "use strict";
+function combineDateTimeParts(dateValue, timeValue) {
+  const date = cleanText(dateValue, 10);
+  const time = cleanText(timeValue, 5);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return "";
+  return normalizeLocalDateTime(`${date}T${time}`) || "";
+}
+
+function writeDateTimeParts(dateInput, timeInput, value) {
+  const normalized = normalizeLocalDateTime(value);
+  dateInput.value = normalized ? normalized.slice(0, 10) : "";
+  timeInput.value = normalized ? normalized.slice(11, 16) : "";
+}
+
+function syncDateTimePartsFromCanonical() {
+  writeDateTimeParts(els.eventStartDatePart, els.eventStartTimePart, els.eventStart.value);
+  writeDateTimeParts(els.eventEndDatePart, els.eventEndTimePart, els.eventEnd.value);
+  writeDateTimeParts(els.eventDepartureDatePart, els.eventDepartureTimePart, els.eventDeparture.value);
+  els.clearDepartureButton.disabled = !normalizeLocalDateTime(els.eventDeparture.value);
+}
+
+function syncCanonicalDateTimeFromParts() {
+  els.eventStart.value = combineDateTimeParts(els.eventStartDatePart.value, els.eventStartTimePart.value);
+  els.eventEnd.value = combineDateTimeParts(els.eventEndDatePart.value, els.eventEndTimePart.value);
+  els.eventDeparture.value = combineDateTimeParts(els.eventDepartureDatePart.value, els.eventDepartureTimePart.value);
+  els.clearDepartureButton.disabled = !els.eventDeparture.value;
+}
+
+function updateStartDateTimeFromParts() {
+  els.eventStart.value = combineDateTimeParts(els.eventStartDatePart.value, els.eventStartTimePart.value);
+  handleEventStartChange();
+  syncDateTimePartsFromCanonical();
+}
+
+function updateEndDateTimeFromParts() {
+  els.eventEnd.value = combineDateTimeParts(els.eventEndDatePart.value, els.eventEndTimePart.value);
+}
+
+function updateDepartureDateTimeFromParts() {
+  let date = cleanText(els.eventDepartureDatePart.value, 10);
+  let time = cleanText(els.eventDepartureTimePart.value, 5);
+  const start = normalizeLocalDateTime(els.eventStart.value);
+  if ((date || time) && start) {
+    if (!date) date = start.slice(0, 10);
+    if (!time) time = start.slice(11, 16);
+    els.eventDepartureDatePart.value = date;
+    els.eventDepartureTimePart.value = time;
+  }
+  els.eventDeparture.value = combineDateTimeParts(date, time);
+  departureFollowsStart = false;
+  els.clearDepartureButton.disabled = !els.eventDeparture.value;
+}
+
+function clearDepartureDateTime() {
+  els.eventDeparture.value = "";
+  els.eventDepartureDatePart.value = "";
+  els.eventDepartureTimePart.value = "";
+  departureFollowsStart = false;
+  els.clearDepartureButton.disabled = true;
+}
 function saveEventFromForm() {
+  syncCanonicalDateTimeFromParts();
   const title = cleanText(els.eventTitle.value, 80);
   const allDay = els.eventAllDay.checked;
   let start;
@@ -88,6 +148,7 @@ function syncAllDayFields() {
       els.eventEnd.value = localDateTimeValue(addMinutes(parseLocalDateTime(els.eventStart.value), 60));
     }
   }
+  syncDateTimePartsFromCanonical();
 }
 
 function defaultEventTimes(preferredDateKey) {

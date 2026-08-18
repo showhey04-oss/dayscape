@@ -228,6 +228,8 @@
 
     .sheet-layer {
       position: fixed;
+      max-width: 100%;
+      overflow-x: hidden;
       inset: 0;
       z-index: 100;
       display: flex;
@@ -256,6 +258,8 @@
     .sheet {
       position: relative;
       z-index: 1;
+      min-width: 0;
+      max-width: 100%;
       display: flex;
       flex-direction: column;
       width: min(100%, 680px);
@@ -318,7 +322,10 @@
 
     .sheet-body {
       flex: 1 1 auto;
-      overflow: auto;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
       padding: 18px 17px calc(var(--safe-bottom) + 28px);
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
@@ -379,6 +386,13 @@
       font-weight: 700;
     }
 
+    .sheet-body form,
+    .form-stack,
+    .field-group {
+      min-width: 0;
+      max-width: 100%;
+    }
+
     .form-stack {
       display: grid;
       gap: 19px;
@@ -414,6 +428,7 @@
     .select-input,
     .datetime-input,
     .date-input,
+    .time-input,
     .search-input,
     .color-name-input {
       width: 100%;

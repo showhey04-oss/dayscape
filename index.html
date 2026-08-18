@@ -141,16 +141,28 @@
 
             <div class="field-group" id="timedDateFields">
               <div class="field-label">日時 <span class="required-mark">必須</span></div>
-              <div class="date-grid">
-                <label class="date-field">
-                  <span>開始</span>
-                  <input class="datetime-input" id="eventStart" type="datetime-local" step="60" required />
-                </label>
-                <label class="date-field">
-                  <span>終了</span>
-                  <input class="datetime-input" id="eventEnd" type="datetime-local" step="60" required />
-                </label>
+              <div class="date-time-editor">
+                <div class="date-time-row">
+                  <span class="date-time-row-label">開始</span>
+                  <div class="date-time-controls">
+                    <label class="sr-only" for="eventStartDatePart">開始日</label>
+                    <input class="date-input date-part-input" id="eventStartDatePart" type="date" required />
+                    <label class="sr-only" for="eventStartTimePart">開始時刻</label>
+                    <input class="time-input time-part-input" id="eventStartTimePart" type="time" step="60" required />
+                  </div>
+                </div>
+                <div class="date-time-row">
+                  <span class="date-time-row-label">終了</span>
+                  <div class="date-time-controls">
+                    <label class="sr-only" for="eventEndDatePart">終了日</label>
+                    <input class="date-input date-part-input" id="eventEndDatePart" type="date" required />
+                    <label class="sr-only" for="eventEndTimePart">終了時刻</label>
+                    <input class="time-input time-part-input" id="eventEndTimePart" type="time" step="60" required />
+                  </div>
+                </div>
               </div>
+              <input id="eventStart" type="hidden" />
+              <input id="eventEnd" type="hidden" />
             </div>
 
             <div class="field-group" id="allDayDateFields" hidden>
@@ -168,9 +180,18 @@
             </div>
 
             <div class="field-group">
-              <label class="field-label" for="eventDeparture">出発日時 <small>任意</small></label>
-              <input class="datetime-input" id="eventDeparture" type="datetime-local" step="60" />
-              <p class="form-note">初期値は開始日時と同じです。必要に応じて変更できます。</p>
+              <div class="field-label">出発日時 <small>任意</small></div>
+              <div class="date-time-controls">
+                <label class="sr-only" for="eventDepartureDatePart">出発日</label>
+                <input class="date-input date-part-input" id="eventDepartureDatePart" type="date" />
+                <label class="sr-only" for="eventDepartureTimePart">出発時刻</label>
+                <input class="time-input time-part-input" id="eventDepartureTimePart" type="time" step="60" />
+              </div>
+              <input id="eventDeparture" type="hidden" />
+              <div class="field-meta-row">
+                <p class="form-note">初期値は開始日時と同じです。</p>
+                <button class="inline-clear-button" id="clearDepartureButton" type="button">設定しない</button>
+              </div>
             </div>
 
             <div class="field-group">

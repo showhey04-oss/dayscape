@@ -224,4 +224,5 @@ function handleEventStartChange() {
   if (departureFollowsStart && !Number.isNaN(start.getTime())) {
     els.eventDeparture.value = localDateTimeValue(start);
   }
+  syncDateTimePartsFromCanonical();
 }

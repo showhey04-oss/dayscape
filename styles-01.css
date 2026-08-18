@@ -32,13 +32,19 @@
     }
 
     html {
-      background: var(--bg);
+      width: 100%;
+      max-width: 100%;
       min-height: 100%;
+      overflow-x: hidden;
+      background: var(--bg);
     }
 
     body {
+      width: 100%;
+      max-width: 100%;
       margin: 0;
       min-width: 320px;
+      overflow-x: hidden;
       min-height: 100vh;
       min-height: 100dvh;
       background:
@@ -52,13 +58,14 @@
 
     body.modal-open {
       overflow: hidden;
-      touch-action: none;
+      touch-action: pan-y;
     }
 
     button,
     input,
     select,
     textarea {
+      max-width: 100%;
       font: inherit;
     }
 

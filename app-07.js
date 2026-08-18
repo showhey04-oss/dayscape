@@ -18,7 +18,7 @@ function readSessionMapsDemoKey() {
 }
 
 const STORAGE_KEY = "dayscape.calendar.v1";
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.2.1";
 const CONFIGURED_GOOGLE_MAPS_API_KEY = cleanConfigValue(window.DAYSCAPE_CONFIG?.googleMapsApiKey);
 const SESSION_GOOGLE_MAPS_DEMO_KEY = readSessionMapsDemoKey();
 const GOOGLE_MAPS_API_KEY = CONFIGURED_GOOGLE_MAPS_API_KEY || SESSION_GOOGLE_MAPS_DEMO_KEY;
@@ -84,9 +84,16 @@ const els = {
   allDayDateFields: document.getElementById("allDayDateFields"),
   eventStart: document.getElementById("eventStart"),
   eventEnd: document.getElementById("eventEnd"),
+  eventStartDatePart: document.getElementById("eventStartDatePart"),
+  eventStartTimePart: document.getElementById("eventStartTimePart"),
+  eventEndDatePart: document.getElementById("eventEndDatePart"),
+  eventEndTimePart: document.getElementById("eventEndTimePart"),
   eventStartDate: document.getElementById("eventStartDate"),
   eventEndDate: document.getElementById("eventEndDate"),
   eventDeparture: document.getElementById("eventDeparture"),
+  eventDepartureDatePart: document.getElementById("eventDepartureDatePart"),
+  eventDepartureTimePart: document.getElementById("eventDepartureTimePart"),
+  clearDepartureButton: document.getElementById("clearDepartureButton"),
   companionChoices: document.getElementById("companionChoices"),
   eventCompanionNote: document.getElementById("eventCompanionNote"),
   eventLocation: document.getElementById("eventLocation"),
@@ -155,16 +162,20 @@ els.settingsButton.addEventListener("click", openSettingsSheet);
 els.saveEventButton.addEventListener("click", saveEventFromForm);
 els.deleteEventButton.addEventListener("click", deleteEditingEvent);
 els.eventAllDay.addEventListener("change", syncAllDayFields);
-els.eventStart.addEventListener("input", handleEventStartChange);
-els.eventDeparture.addEventListener("input", () => {
-  departureFollowsStart = false;
-});
+els.eventStartDatePart.addEventListener("input", updateStartDateTimeFromParts);
+els.eventStartTimePart.addEventListener("input", updateStartDateTimeFromParts);
+els.eventEndDatePart.addEventListener("input", updateEndDateTimeFromParts);
+els.eventEndTimePart.addEventListener("input", updateEndDateTimeFromParts);
+els.eventDepartureDatePart.addEventListener("input", updateDepartureDateTimeFromParts);
+els.eventDepartureTimePart.addEventListener("input", updateDepartureDateTimeFromParts);
+els.clearDepartureButton.addEventListener("click", clearDepartureDateTime);
 els.eventStartDate.addEventListener("change", () => {
   if (!els.eventEndDate.value || els.eventEndDate.value < els.eventStartDate.value) els.eventEndDate.value = els.eventStartDate.value;
   if (departureFollowsStart && els.eventStartDate.value) {
     const departureTime = els.eventDeparture.value.slice(11, 16) || els.eventStart.value.slice(11, 16) || "10:00";
     els.eventDeparture.value = `${els.eventStartDate.value}T${departureTime}`;
   }
+  syncDateTimePartsFromCanonical();
 });
 els.eventForm.addEventListener("submit", event => { event.preventDefault(); saveEventFromForm(); });
 els.eventPlaceChange.addEventListener("click", () => {

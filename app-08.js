@@ -48,7 +48,7 @@ function ensureAppInfoSection() {
     <div class="settings-heading">
       <div>
         <h3>このアプリについて</h3>
-        <p>Dayscape v1.2 · 予定データはこの端末に保存されます。</p>
+        <p>Dayscape v1.2.1 · 予定データはこの端末に保存されます。</p>
       </div>
     </div>
     <div class="attribution">
