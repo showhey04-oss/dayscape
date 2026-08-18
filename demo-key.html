@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f6f2" />
+  <title>Dayscape — Demo Key設定</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background:#f7f6f2; color:#242321; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100svh; display:grid; place-items:center; padding:24px; background:#f7f6f2; }
+    main { width:min(100%, 420px); }
+    .brand { display:flex; align-items:center; gap:10px; margin-bottom:28px; }
+    .mark { width:18px; height:18px; border-radius:6px; background:#697b6d; box-shadow:inset 0 0 0 5px #dfe5df; }
+    h1 { margin:0; font-size:21px; letter-spacing:-.02em; }
+    .panel { background:#fff; border:1px solid #e6e3dc; border-radius:22px; padding:22px; box-shadow:0 10px 32px rgba(50,45,38,.06); }
+    h2 { margin:0 0 8px; font-size:18px; letter-spacing:-.02em; }
+    p { margin:0; color:#716d66; font-size:14px; line-height:1.65; }
+    label { display:block; margin-top:22px; font-size:13px; font-weight:650; }
+    input { width:100%; margin-top:8px; border:1px solid #d9d5cd; border-radius:13px; padding:14px 15px; font:inherit; font-size:16px; outline:none; background:#fbfaf8; }
+    input:focus { border-color:#859388; box-shadow:0 0 0 3px rgba(105,123,109,.13); }
+    button { width:100%; margin-top:16px; border:0; border-radius:14px; padding:14px 16px; font:inherit; font-weight:700; background:#263128; color:#fff; cursor:pointer; }
+    button:disabled { opacity:.45; cursor:default; }
+    .note { margin-top:14px; font-size:12px; color:#8b867e; }
+    .error { min-height:20px; margin-top:10px; font-size:13px; color:#a64f45; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><span class="mark" aria-hidden="true"></span><h1>Dayscape</h1></div>
+    <section class="panel">
+      <h2>Google Placesを検証</h2>
+      <p>取得したMaps Demo Keyを入力してください。キーはGitHubへ保存せず、このタブの検証セッションだけで使用します。</p>
+      <form id="demoKeyForm">
+        <label for="demoKey">Maps Demo Key</label>
+        <input id="demoKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Demo Keyを入力" />
+        <button id="startButton" type="submit" disabled>Dayscapeを開く</button>
+        <div class="error" id="error" role="alert"></div>
+      </form>
+      <p class="note">この画面は開発検証専用です。本番公開時は制限付きの標準APIキーへ切り替えます。</p>
+    </section>
+  </main>
+  <script>
+    "use strict";
+    const form = document.getElementById("demoKeyForm");
+    const input = document.getElementById("demoKey");
+    const button = document.getElementById("startButton");
+    const error = document.getElementById("error");
+    const normalize = value => String(value || "").trim().replace(/[\u0000-\u001F\u007F]/g, "");
+    input.addEventListener("input", () => {
+      button.disabled = normalize(input.value).length < 20;
+      error.textContent = "";
+    });
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const key = normalize(input.value);
+      if (key.length < 20) {
+        error.textContent = "Demo Keyを確認してください。";
+        return;
+      }
+      const target = `./index.html#dayscapeDemoKey=${encodeURIComponent(key)}`;
+      location.assign(target);
+    });
+  </script>
+</body>
+</html>
