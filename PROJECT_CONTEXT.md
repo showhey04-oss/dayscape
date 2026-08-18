@@ -6,7 +6,8 @@
 - Primary users: non-engineer couple in their 30s with a child
 - Primary device: iPhone
 - Current prototype lineage: single-file HTML calendar
-- Current implementation: Dayscape Calendar v1.2 pre-release
+- Current implementation: Dayscape Calendar v1.2 public pilot
+- Public URL: `https://showhey04-oss.github.io/dayscape/`
 
 ## 2. Product goal
 Create a simple, refined family calendar that combines:
@@ -99,16 +100,17 @@ Target behavior:
 11. Day view: show place name and, when useful, address
 
 ### Web application / deployment
-Move from local single-file prototype toward an installable iPhone web app:
-- HTTPS hosting
-- GitHub repository
-- GitHub Pages as default deployment option
+The public pilot is deployed as an installable iPhone web app with:
+- HTTPS hosting through GitHub Pages
+- Public GitHub repository
 - Web App Manifest
 - Apple touch icon
 - standalone display
 - Service Worker
 - offline startup for core calendar UI
-- Google Maps API key restricted by website and API
+- session-only Maps Demo Key validation entry
+
+A production Google Maps Platform browser key is not embedded yet. It must be restricted by website and API before later approval.
 
 ## 6. Current architecture direction
 - Static frontend application
@@ -117,17 +119,18 @@ Move from local single-file prototype toward an installable iPhone web app:
 - Open-Meteo for weather/geocoding where applicable
 - Google Places for event place search
 - Google Maps URL for opening selected places
+- GitHub Actions deployment with post-deployment smoke testing
 
 No family/cloud synchronization is included yet.
 
 ## 7. Deferred features / roadmap
 
-### v1.2 candidate
+### v1.2 public pilot
 - Google Places search
 - Google Maps deep/open link
 - PWA conversion
 - GitHub Pages deployment
-- API key restriction
+- Demo Key validation
 - Maintain v1.1 data compatibility
 
 ### v1.3 candidate
@@ -165,6 +168,7 @@ Do not add unless separately approved:
 - Complexity should only be added when it materially reduces daily family scheduling friction.
 - Human approval was granted on 2026-08-18 to publish the repository and the v1.2 public pilot through GitHub Pages.
 - The public pilot keeps `config.js` free of Google API keys; Demo Key input remains session-only until the production key is separately approved and restricted.
+- Deployment health is verified automatically after each `main` push and recorded in GitHub Issue #2.
 
 ## 10. Development governance
 - This Project is the canonical workspace for Dayscape decisions.
@@ -179,7 +183,7 @@ Do not add unless separately approved:
   5. release/publication decisions.
 
 ## 11. Current state
-Status: v1.2 PUBLIC PRE-RELEASE PREPARED / GITHUB SETTINGS PENDING
+Status: v1.2 PUBLIC PILOT DEPLOYED / IPHONE VALIDATION PENDING
 
 Completed:
 - Initial one-shot HTML prototype
@@ -194,7 +198,7 @@ Completed:
 - v1.2 place field, Google Places integration shell, Google Maps links, and PWA assets
 - Google Places persistence model revised to Place ID-only for policy compliance
 - 390px iPhone-equivalent rendering QA
-- GitHub repository populated: `showhey04-oss/dayscape`
+- GitHub repository populated and published: `showhey04-oss/dayscape`
 - Maps Demo Key obtained by the project owner
 - Demo Key session-only validation entry implemented
 - Public Terms of Use and Privacy Policy added
@@ -203,12 +207,13 @@ Completed:
 - Service Worker updated for the public pilot shell
 - Public source secret scan completed with no API key or schedule data detected
 - Human approval granted to publish the repository and web application publicly
+- GitHub Pages deployed at `https://showhey04-oss.github.io/dayscape/`
+- Post-deployment checks passed for the app shell, Service Worker, PWA Manifest, Demo Key page, policies, and empty public API-key configuration
 
 Next major work:
-1. Change `showhey04-oss/dayscape` visibility from Private to Public
-2. Set GitHub Pages source to GitHub Actions
-3. Trigger and confirm the Pages deployment at `https://showhey04-oss.github.io/dayscape/`
-4. Validate Google Places with the Demo Key on a physical iPhone
-5. Complete the iPhone/PWA compatibility checklist
-6. Obtain and restrict a production Google Maps Platform browser key
-7. Replace Demo validation with the production key only after validation and cost controls
+1. Validate Google Places with the Demo Key on a physical iPhone
+2. Complete the iPhone/PWA compatibility checklist
+3. Review and fix any real-device interaction or layout defects
+4. Decide whether the public pilot is ready to use as the normal family calendar
+5. Obtain and restrict a production Google Maps Platform browser key when Places should be enabled without session entry
+6. Replace Demo validation with the production key only after validation and cost controls
