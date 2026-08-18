@@ -1,0 +1,54 @@
+name: Apply Dayscape v1.2.1 iPhone UX fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".dayscape-fix/**"
+      - ".github/workflows/apply-v1.2.1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct and apply verified patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .dayscape-fix/part-* | tr -d '\n\r' | base64 --decode > /tmp/dayscape-v1.2.1.patch
+          echo "9777216048e0ef4f8794af85e432230a08c858d0c93f4240d7ad4acd55da5bac  /tmp/dayscape-v1.2.1.patch" | sha256sum --check --strict
+          git apply --check /tmp/dayscape-v1.2.1.patch
+          git apply /tmp/dayscape-v1.2.1.patch
+          rm -rf .dayscape-fix
+          rm -f .github/workflows/apply-v1.2.1.yml
+
+      - name: Validate updated application
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'id="eventStartTimePart"' index.html
+          grep -q 'id="eventEndTimePart"' index.html
+          grep -q 'id="eventDepartureTimePart"' index.html
+          grep -q 'APP_VERSION = "1.2.1"' app-07.js
+          grep -q 'dayscape-shell-v1.2.3' service-worker.js
+          grep -q 'overflow-x: hidden' styles-03.css
+          for file in app-*.js service-worker.js; do node --check "$file"; done
+          git diff --check
+
+      - name: Commit updated source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Fix iPhone event sheet date-time UX"
+          git push
