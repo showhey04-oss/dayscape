@@ -44,6 +44,9 @@ function ensureAppInfoSection() {
   const section = document.createElement("section");
   section.className = "settings-section";
   section.dataset.dayscapeAppInfo = "";
+  const demoLink = GOOGLE_MAPS_KEY_MODE === "configured"
+    ? ""
+    : '<a href="./demo-key.html">Google Placesを検証</a> · ';
   section.innerHTML = `
     <div class="settings-heading">
       <div>
@@ -52,8 +55,7 @@ function ensureAppInfoSection() {
       </div>
     </div>
     <div class="attribution">
-      <a href="./demo-key.html">Google Placesを検証</a> ·
-      <a href="./privacy.html">プライバシーポリシー</a> ·
+      ${demoLink}<a href="./privacy.html">プライバシーポリシー</a> ·
       <a href="./terms.html">利用規約</a> ·
       <a href="https://github.com/showhey04-oss/dayscape/issues" target="_blank" rel="noopener noreferrer">フィードバック</a>
     </div>
