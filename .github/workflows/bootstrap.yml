@@ -4,12 +4,16 @@ on:
   push:
     paths:
       - ".bootstrap/trigger"
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   import-source:
+    if: ${{ github.repository == 'showhey04-oss/dayscape' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -19,6 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test -f .bootstrap/trigger
           cat .bootstrap/part-* | tr -d '\n\r' | base64 --decode > /tmp/dayscape.zip
           echo "317cbab8a6622b3994f545e07c5c239d082f8b564f21b50583c2d694a6d89ef8  /tmp/dayscape.zip" | sha256sum --check --strict
           mkdir -p /tmp/dayscape-source
