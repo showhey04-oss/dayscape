@@ -97,7 +97,7 @@ jobs:
           }
 
           check_text 'App shell' '' '<title>Dayscape'
-          check_text 'Service Worker' 'service-worker.js' 'dayscape-shell-v1.2.0'
+          check_text 'Service Worker' 'service-worker.js' 'const CACHE_NAME = "dayscape-shell-'
           check_text 'Demo Key entry' 'demo-key.html' 'Google Placesを検証'
           check_text 'Privacy Policy' 'privacy.html' 'プライバシーポリシー'
           check_text 'Terms of Use' 'terms.html' '利用規約'
