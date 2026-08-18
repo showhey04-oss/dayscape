@@ -1,70 +1,103 @@
-# Dayscape v1.2 — QA Report
+# Dayscape v1.2.1 — QA Report
 
 Date: 2026-08-18
-Status: pre-release
+Status: public pilot deployed / physical iPhone fix recheck pending
 
-## Static checks
+## Scope
 
-PASS:
-- JavaScript syntax (`index.html` inline scripts, `config.js`, `service-worker.js`)
-- HTML id uniqueness
-- PWA manifest JSON parse
-- Manifest icon file existence
-- `dayscape.calendar.v1` storage key retained
-- `APP_VERSION = 1.2.0`
-- event form order: 予定名 → 場所 → 終日／日時
-- Google-selected place persistence restricted to Place ID
-- `Google Maps` attribution markup present
-- No production Google API key or GitHub token present in tracked files
-- Local Git repository has a clean `main` branch and configured `origin`
+This report covers the v1.2.1 iPhone UX correction requested after the first physical-device validation:
 
-## Chromium mobile-equivalent interaction checks
+1. Prevent unintended horizontal scrolling in the event entry sheet.
+2. Make the event time values easier to notice than in the compound iOS `datetime-local` picker.
+3. Preserve the existing v1.1 / v1.2 persisted event schema and behavior.
 
-Viewport: 390 × 844 CSS px, device scale factor 3.
+## Physical iPhone validation before the v1.2.1 correction
 
-PASS:
-- Calendar renders without horizontal overflow
-- Date tap opens new event with tapped date preselected
-- Departure datetime initially equals start datetime
-- Start change updates departure while follow mode is active
-- Manual departure edit disables subsequent automatic following
-- Free-text place can be entered, saved, reopened, and displayed in week view
-- Free-text place generates Google Maps search URL
-- Event edit sheet renders without horizontal overflow
+Reported PASS:
+- Safari rendering
+- Month / Week / Day views
+- Event create / edit / delete
+- 1-minute date-time and departure-time handling
+- Google Places suggestion display
+- Google Maps launch
+- Home Screen installation
+- standalone display
+- offline startup
 
-## Google Places mocked integration checks
+Reported findings:
+- The event entry sheet could be moved horizontally.
+- The time value inside the native compound date-time picker was visually small and easy to overlook.
 
-A browser-side Google Places mock was injected to validate the integration path without a production API key.
+## v1.2.1 implementation
 
-PASS:
-- `PlaceAutocompleteElement` initialization path
-- `gmp-select` selection path
-- Selected Google place name/address shown during session
-- Persisted event data contains only:
-  - `source: google`
-  - `placeId`
-- Returned display name, address, latitude, longitude are not persisted
-- Week display resolves the in-memory Google place name
-- `Google Maps` attribution shown
-- Third-party provider attribution shown when returned
-- Google Maps URL contains `api=1`, `query`, and `query_place_id`
+### Horizontal-overflow containment
 
-## Responsive checks
+Implemented:
+- `html` and `body` constrained to the viewport width with horizontal overflow disabled.
+- Sheet layer, sheet, sheet body, forms, field groups, Flex/Grid children, and input controls constrained with `max-width: 100%` and `min-width: 0` where required.
+- Event-sheet scrolling limited to the vertical direction.
+- Google Places autocomplete host and child component constrained to the available inline size.
 
-PASS horizontal overflow check:
+### Date-time visibility
+
+Implemented:
+- Replaced visible compound `datetime-local` controls with separate native `date` and `time` controls for Start, End, and Departure.
+- Increased time-input text size and weight.
+- Kept `step="60"` for one-minute precision.
+- Added `設定しない` for clearing Departure.
+
+### Compatibility
+
+Preserved:
+- Storage key: `dayscape.calendar.v1`
+- Persisted date-time format: `YYYY-MM-DDTHH:mm`
+- Existing event object schema
+- New-event Departure initially matching Start
+- Departure following Start until manually edited
+- Manual Departure override
+- v1.1 / v1.2 event-data normalization path
+
+## Local mobile-equivalent QA
+
+Reported PASS at:
 - 320 px
-- 375 px
 - 390 px
 - 430 px
 
-## Not yet validated
+Reported PASS:
+- No event-sheet horizontal overflow
+- Date and time controls remain inside the viewport
+- Forced oversized Google Places element remains contained
+- Event save and reopen retain one-minute values
+- End time adjusts correctly when Start moves past End
+- Departure follows Start before manual edit
+- Departure stops following after manual edit
+- Departure can be cleared
+- Cross-day event end values remain valid
 
-Requires HTTPS deployment / physical device / production Google key:
-- Real Google Places autocomplete results
-- Google billing / API restrictions
-- Google Maps app handoff on physical iPhone
-- PWA Home Screen installation on physical iPhone
-- Service Worker offline behavior on iPhone Safari
-- GitHub Pages production path and cache behavior
-- Real third-party attribution cases from Google Places
-- Public Terms of Use / Privacy Policy
+## GitHub Pages deployment QA
+
+Deployment workflow:
+- Run: `32157279532`
+- Commit: `d041ef4b927ef18f496526defa06ac9631af3164`
+- Result: PASS
+
+Post-deployment smoke test PASS:
+- App shell
+- Service Worker
+- Demo Key entry
+- Privacy Policy
+- Terms of Use
+- PWA Manifest
+- Public `config.js` contains no Google Maps API key
+
+## Remaining physical-device checks
+
+- Confirm the v1.2.1 event sheet no longer moves horizontally on the physical iPhone.
+- Confirm Start / End / Departure times are sufficiently noticeable on the physical iPhone.
+- Confirm Google Place ID persistence and place-name re-resolution after relaunch.
+- Restore a v1.1 backup and confirm read/write compatibility.
+
+## Release assessment
+
+The v1.2.1 correction is implemented and publicly deployed. No data-schema migration was introduced. Final closure of the two reported UI findings requires the short physical-iPhone recheck listed above.
