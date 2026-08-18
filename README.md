@@ -1,20 +1,26 @@
-# Dayscape
+# Dayscape v1.2
 
-Dayscape は、iPhoneでの利用を前提にした家族向けカレンダーPWAです。
+Dayscapeは、iPhoneでの利用を前提にした家族向けカレンダーPWAです。
 
-予定・場所・天気・出発情報を一つの流れにまとめ、非エンジニアの夫婦・子育て家庭が日常的に迷わず使えることを目標としています。
+**予定・場所・天気・出発**を一つの流れにまとめ、非エンジニアの夫婦・子育て家庭が日常的に迷わず使えることを目標としています。
 
 ## 現在の状態
 
-- バージョン: v1.2 pre-release
+- バージョン: `v1.2 public pilot`
 - 配布形態: 静的Webアプリ / PWA
+- 公開先: GitHub Pages
 - 保存方式: ブラウザ内のローカル保存
 - クラウド同期: 未導入
-- 公開状態: 未公開
+- Google Places: Demo Keyによる実API検証段階
+
+公開予定URL:
+
+`https://showhey04-oss.github.io/dayscape/`
 
 ## 主な機能
 
 - 月・週・日表示
+- 日付タップから予定を追加
 - 予定の登録・編集・削除
 - 終日予定、複数日予定、1分単位の時刻設定
 - 出発日時
@@ -24,11 +30,31 @@ Dayscape は、iPhoneでの利用を前提にした家族向けカレンダーPW
 - Google Placesによる場所検索
 - 場所タップからGoogle Mapsを開く
 - JSONバックアップ・復元
-- ホーム画面追加、Service Worker、オフライン起動
+- ホーム画面追加、standalone表示、Service Worker、オフライン起動
 
-## Google Maps Platform設定
+## Google Placesの保存方針
 
-`config.js` の `googleMapsApiKey` にブラウザ用APIキーを設定します。
+Google候補から選んだ場所は、Google Maps Platformのポリシーに合わせ、端末へ永続保存するGoogle由来データを **Place IDのみ** とします。
+
+- Google候補から選択した場所
+  - 永続保存: `source`, `placeId`
+  - セッション中のみ: 表示名、住所、緯度・経度、帰属情報
+- 自由入力した場所
+  - 永続保存: `source`, 利用者が入力した名称
+
+保存済みPlace IDは、起動後にGoogle Placesへ再問い合わせして表示名等を解決します。詳細は [`DECISION-001-google-places-storage.md`](./DECISION-001-google-places-storage.md) を参照してください。
+
+## Demo Keyでの検証
+
+Demo Keyはリポジトリへ保存しません。次の専用ページで入力し、そのブラウザタブの検証セッションだけで使用します。
+
+`https://showhey04-oss.github.io/dayscape/demo-key.html`
+
+入力したDemo KeyはURLから直ちに除去し、`sessionStorage`だけに保持します。予定データ、`localStorage`、バックアップJSONには保存しません。
+
+## 本番用Google Maps Platform設定
+
+本番公開でGoogle Placesを常時有効にする場合は、`config.js`の`googleMapsApiKey`に制限済みのブラウザ用APIキーを設定します。
 
 ```js
 window.DAYSCAPE_CONFIG = {
@@ -36,36 +62,49 @@ window.DAYSCAPE_CONFIG = {
 };
 ```
 
-APIキーには必ず次の制限を設定してください。
+必須設定:
 
-- Application restriction: Websites
-- Website restriction: 実際に公開するGitHub Pages等のURL
-- API restriction: Maps JavaScript API / Places API (New)
+1. Maps JavaScript APIを有効化
+2. Places API (New)を有効化
+3. Application restrictionsを`Websites`に設定
+4. Dayscapeの公開URLだけをHTTP referrerとして許可
+5. API restrictionsで利用APIを限定
+6. 予算アラートと必要なクォータ上限を設定
 
-APIキー未設定時も、場所の自由入力とGoogle Maps検索リンクは利用できます。
+詳細は [`GOOGLE_MAPS_SETUP.md`](./GOOGLE_MAPS_SETUP.md) を参照してください。
 
 ## データとプライバシー
 
-予定データはGitHubへ送信されません。アプリ本体のみをリポジトリで管理し、予定、同行者、場所、カテゴリ等は利用端末のブラウザ内に保存します。
+予定データはGitHubへ送信されません。GitHubにはHTML、CSS、JavaScript等のアプリ本体だけを置き、予定、同行者、場所、カテゴリ等は利用端末のブラウザ内に保存します。
 
-Google Placesから選択した場所は、永続データとしてPlace IDを保存し、Google由来の名称・住所・座標は起動時に再取得します。Google Placesを利用できない場合は自由入力へフォールバックします。
+- [プライバシーポリシー](./privacy.html)
+- [利用規約](./terms.html)
+- [セキュリティ上の注意](./SECURITY.md)
 
-## ファイル構成
+## ローカル確認
+
+Service WorkerとブラウザAPIを確認するため、`file://`ではなくHTTPで配信します。
+
+```bash
+python3 -m http.server 8080
+```
+
+その後、`http://localhost:8080/`を開きます。
+
+## 主要ファイル
 
 - `index.html`: アプリ本体
 - `config.js`: 実行時設定
 - `manifest.webmanifest`: PWA設定
 - `service-worker.js`: オフラインキャッシュ
-- `icons/`: ホーム画面用アイコン
+- `demo-key.html`: Demo Key検証入口
+- `privacy.html`: プライバシーポリシー
+- `terms.html`: 利用規約
+- `.github/workflows/pages.yml`: GitHub Pages配信
 - `PROJECT_CONTEXT.md`: 正本仕様
-- `DECISION-001-google-places-storage.md`: Google Places保存方針
 - `QA_REPORT.md`: 検証結果
-- `RELEASE_CHECKLIST.md`: 公開前チェック
+- `RELEASE_CHECKLIST.md`: 公開・実機確認チェック
 
-## 開発方針
+## ライセンス
 
-- iPhone-first
-- シンプル、洗練、低ノイズ
-- 自然で簡潔な日本語
-- 機能数より、日常利用時の操作摩擦低減を優先
-- v1.1の保存データ互換性を原則維持
+現時点ではオープンソースライセンスを設定していません。公開リポジトリでの閲覧は可能ですが、別途明示がない限り、複製・改変・再配布を許諾するものではありません。
