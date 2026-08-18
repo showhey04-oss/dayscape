@@ -1,40 +1,46 @@
-# Dayscape v1.2 公開前チェック
+# Dayscape v1.2 公開・実機確認チェック
 
-- [x] Private GitHubリポジトリ作成
-- [x] v1.2 pre-releaseソースの初期投入
-- [x] Maps Demo Key取得
-- [x] Demo KeyをGitHubへ保存しないセッション入力導線を実装
+## 公開準備
 
-## Pre-release validation
+- [x] GitHubリポジトリ作成
+- [x] v1.2 pre-releaseソース投入
+- [x] Demo Key取得
+- [x] Demo Keyを永続保存しない検証導線
+- [x] プライバシーポリシー
+- [x] 利用規約
+- [x] GitHub Pages workflow準備
+- [x] 公開判断
+- [x] 公開版から規約・プライバシーポリシーへの導線
+- [x] 公開対象ソースにAPIキー・予定データがないことを確認
+- [ ] リポジトリをPublicへ変更
+- [ ] GitHub PagesのSourceをGitHub Actionsへ設定
+- [ ] Pages workflow実行成功
+- [ ] 公開URLのHTTPS応答確認
 
-- [ ] `demo-key.html`からDemo Keyを入力
-- [ ] Google Places候補が表示される
-- [ ] 候補から施設を選択できる
-- [ ] Place IDだけが永続保存される
-- [ ] 再読込後にPlace IDから名称・住所を再解決できる
-- [ ] 週表示・日表示で場所を確認
+## iPhone実機確認
+
+- [ ] Safariで月・週・日表示
+- [ ] 日付タップから予定追加
+- [ ] 予定の編集・削除
+- [ ] 1分単位の日時保持
+- [ ] 出発日時の初期値・追従・手動解除
+- [ ] Demo Key入力
+- [ ] Google Places候補表示
+- [ ] 候補選択とPlace ID保存
+- [ ] 再起動後の場所名再取得
 - [ ] 場所タップからGoogle Mapsアプリ／Webを起動
-- [ ] Places通信失敗時に自由入力へフォールバック
+- [ ] ホーム画面へ追加
+- [ ] standalone起動
+- [ ] オフラインでカレンダー起動・予定参照
+- [ ] v1.1バックアップ復元と保存互換性
 
-## Production setup
+## 本番用Placesを常時有効化する場合
 
 - [ ] Google Cloudで請求先設定
 - [ ] Maps JavaScript API有効化
 - [ ] Places API (New)有効化
 - [ ] ブラウザAPIキー発行
-- [ ] GitHub Pages URLにHTTP referrer制限
+- [ ] Pages URLにHTTP referrer制限
 - [ ] API restriction設定
-- [ ] config.jsへ制限済みAPIキー設定
-- [ ] `demo-key.html`をリリース成果物から除外
-- [ ] Humanによる公開判断
-- [ ] GitHub Pages公開
-
-## iPhone release QA
-
-- [ ] iPhone Safariで予定追加・編集・削除
-- [ ] Google Places候補選択
-- [ ] 場所タップからGoogle Mapsアプリ／Webを起動
-- [ ] ホーム画面へ追加
-- [ ] standalone起動
-- [ ] オフラインでカレンダー起動・予定参照
-- [ ] v1.1バックアップを復元して互換性確認
+- [ ] 予算アラート・クォータ設定
+- [ ] `config.js`へ制限済みAPIキー設定
