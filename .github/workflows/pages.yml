@@ -37,8 +37,6 @@ jobs:
              styles.css styles-*.css app.js app-*.js _site/
           cp icons/*.png _site/icons/
 
-          # Keep the repository source free of API keys. The browser key is injected
-          # only into the deployment artifact from the GitHub Actions secret.
           python3 - <<'PY'
           import json
           import os
@@ -70,6 +68,10 @@ jobs:
           test -s _site/icons/icon-512.png
           test -s _site/icons/icon-maskable-512.png
           python3 -m json.tool _site/manifest.webmanifest >/dev/null
+
+          for file in _site/app.js _site/app-*.js _site/service-worker.js _site/config.js; do
+            node --check "$file"
+          done
 
           python3 - <<'PY'
           import os
