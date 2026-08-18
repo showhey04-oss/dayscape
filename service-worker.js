@@ -1,4 +1,4 @@
-const CACHE_NAME = "dayscape-shell-v1.2.1";
+const CACHE_NAME = "dayscape-shell-v1.2.2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -43,46 +43,38 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
+
   const url = new URL(request.url);
 
   // Weather / Google Places は常にネットワークを利用し、失敗時はアプリ側のフォールバックに任せる。
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.endsWith("/config.js")) {
+  if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then(response => {
           if (response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy)));
           }
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(async () => (await caches.match("./index.html")) || Response.error())
     );
     return;
   }
 
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy));
-          return response;
-        })
-        .catch(() => caches.match("./index.html"))
-    );
-    return;
-  }
-
+  // オンライン時は常に最新版を取得し、失敗時だけキャッシュへフォールバックする。
+  // これによりPWAを再インストールせず、CSS/JavaScript更新を受け取れる。
   event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request).then(response => {
-      if (response.ok) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-      }
-      return response;
-    }))
+    fetch(request)
+      .then(response => {
+        if (response.ok) {
+          const copy = response.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, copy)));
+        }
+        return response;
+      })
+      .catch(async () => (await caches.match(request)) || Response.error())
   );
 });
