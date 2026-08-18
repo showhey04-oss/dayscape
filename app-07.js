@@ -1,7 +1,28 @@
 "use strict";
+function readSessionMapsDemoKey() {
+  try {
+    const hash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
+    const params = new URLSearchParams(hash);
+    const hashKey = cleanConfigValue(params.get("dayscapeDemoKey"));
+    if (hashKey) {
+      try { sessionStorage.setItem("dayscape.maps.demoKey", hashKey); } catch (_) {}
+      try { history.replaceState(null, "", `${location.pathname}${location.search}`); } catch (_) {}
+      return hashKey;
+    }
+  } catch (_) {}
+  try {
+    return cleanConfigValue(sessionStorage.getItem("dayscape.maps.demoKey"));
+  } catch (_) {
+    return "";
+  }
+}
+
 const STORAGE_KEY = "dayscape.calendar.v1";
 const APP_VERSION = "1.2.0";
-const GOOGLE_MAPS_API_KEY = cleanConfigValue(window.DAYSCAPE_CONFIG?.googleMapsApiKey);
+const CONFIGURED_GOOGLE_MAPS_API_KEY = cleanConfigValue(window.DAYSCAPE_CONFIG?.googleMapsApiKey);
+const SESSION_GOOGLE_MAPS_DEMO_KEY = readSessionMapsDemoKey();
+const GOOGLE_MAPS_API_KEY = CONFIGURED_GOOGLE_MAPS_API_KEY || SESSION_GOOGLE_MAPS_DEMO_KEY;
+const GOOGLE_MAPS_KEY_MODE = CONFIGURED_GOOGLE_MAPS_API_KEY ? "configured" : (SESSION_GOOGLE_MAPS_DEMO_KEY ? "demo-session" : "none");
 const FORECAST_TTL_MS = 30 * 60 * 1000;
 const HOUR_HEIGHT = 82;
 const COMPANIONS = ["ひとり", "パートナー", "子ども", "家族全員", "友人"];
