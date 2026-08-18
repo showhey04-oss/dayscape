@@ -80,14 +80,55 @@ async function resolveGooglePlace(placeId) {
   return promise;
 }
 
-async function resolveGooglePlacesForEvents() {
-  if (!googlePlacesReady) return;
-  const ids = [...new Set(state.events.map(event => normalizePlace(event.place)).filter(place => place?.source === "google").map(place => place.placeId))];
-  const unresolved = ids.filter(id => !resolvedGooglePlaces.has(id));
+let visibleGooglePlaceResolutionPromise = null;
+
+function visibleEventRange() {
+  if (state.settings.view === "week") {
+    const start = startOfWeek(anchorDate);
+    return { start, end: addDays(start, 7) };
+  }
+  if (state.settings.view === "day") {
+    const start = startOfDay(anchorDate);
+    return { start, end: addDays(start, 1) };
+  }
+  return null;
+}
+
+function visibleGooglePlaceIds() {
+  const range = visibleEventRange();
+  if (!range) return [];
+  const ids = new Set();
+  state.events.forEach(event => {
+    const start = parseLocalDateTime(event.start);
+    const end = parseLocalDateTime(event.end);
+    if (start >= range.end || end <= range.start) return;
+    const place = normalizePlace(event.place);
+    if (place?.source === "google" && place.placeId) ids.add(place.placeId);
+  });
+  return [...ids];
+}
+
+async function resolveGooglePlacesForVisibleEvents() {
+  if (!googlePlacesReady || state.settings.view === "month") return;
+  if (visibleGooglePlaceResolutionPromise) return visibleGooglePlaceResolutionPromise;
+  const unresolved = visibleGooglePlaceIds().filter(id => !resolvedGooglePlaces.has(id));
   if (!unresolved.length) return;
-  await Promise.all(unresolved.map(resolveGooglePlace));
+
+  const promise = Promise.all(unresolved.map(resolveGooglePlace));
+  visibleGooglePlaceResolutionPromise = promise;
+  try {
+    await promise;
+  } finally {
+    if (visibleGooglePlaceResolutionPromise === promise) visibleGooglePlaceResolutionPromise = null;
+  }
   render();
 }
+
+const renderWithoutGooglePlaceResolution = render;
+render = function renderWithVisibleGooglePlaceResolution() {
+  renderWithoutGooglePlaceResolution();
+  if (state.settings.view !== "month") void resolveGooglePlacesForVisibleEvents();
+};
 
 function loadGoogleMapsScript(apiKey) {
   if (window.google?.maps?.importLibrary) return Promise.resolve();
@@ -130,7 +171,7 @@ async function initializeEventPlaceSearch() {
     eventPlaceFallbackInput = null;
     googlePlacesReady = true;
     els.eventPlaceNote.textContent = "Google マップの候補から場所を選択できます。";
-    resolveGooglePlacesForEvents();
+    void resolveGooglePlacesForVisibleEvents();
   } catch (error) {
     console.warn("Dayscape: Google Places could not be initialized.", error);
     renderPlaceFallback("場所検索に接続できないため、自由入力で保存できます。");
