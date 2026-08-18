@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - ".bootstrap/trigger"
+  issues:
+    types: [opened]
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
@@ -13,7 +15,7 @@ permissions:
 
 jobs:
   import-source:
-    if: ${{ github.repository == 'showhey04-oss/dayscape' }}
+    if: ${{ github.repository == 'showhey04-oss/dayscape' && (github.event_name != 'issues' || github.event.issue.title == '[internal] Bootstrap Dayscape source') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
