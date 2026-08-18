@@ -38,6 +38,29 @@ document.addEventListener("keydown", event => {
   else if (els.settingsSheet.classList.contains("is-open")) closeSettingsSheet();
 });
 
+function ensureAppInfoSection() {
+  const stack = document.querySelector("#settingsSheet .settings-stack");
+  if (!stack || stack.querySelector("[data-dayscape-app-info]")) return;
+  const section = document.createElement("section");
+  section.className = "settings-section";
+  section.dataset.dayscapeAppInfo = "";
+  section.innerHTML = `
+    <div class="settings-heading">
+      <div>
+        <h3>このアプリについて</h3>
+        <p>Dayscape v1.2 · 予定データはこの端末に保存されます。</p>
+      </div>
+    </div>
+    <div class="attribution">
+      <a href="./privacy.html">プライバシーポリシー</a> ·
+      <a href="./terms.html">利用規約</a> ·
+      <a href="https://github.com/showhey04-oss/dayscape/issues" target="_blank" rel="noopener noreferrer">フィードバック</a>
+    </div>
+  `;
+  stack.appendChild(section);
+}
+
+ensureAppInfoSection();
 render();
 initializeEventPlaceSearch();
 refreshActiveWeather();
