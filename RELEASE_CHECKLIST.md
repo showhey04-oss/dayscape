@@ -12,10 +12,16 @@
 - [x] 公開判断
 - [x] 公開版から規約・プライバシーポリシーへの導線
 - [x] 公開対象ソースにAPIキー・予定データがないことを確認
-- [ ] リポジトリをPublicへ変更
-- [ ] GitHub PagesのSourceをGitHub Actionsへ設定
-- [ ] Pages workflow実行成功
-- [ ] 公開URLのHTTPS応答確認
+- [x] リポジトリをPublicへ変更
+- [x] GitHub PagesのSourceをGitHub Actionsへ設定
+- [x] Pages workflow実行成功
+- [x] 公開URLのHTTPS応答確認
+- [x] アプリ本体の配信確認
+- [x] Service Workerの配信確認
+- [x] PWA Manifestの配信・JSON妥当性確認
+- [x] Demo Key入力画面の配信確認
+- [x] プライバシーポリシー・利用規約の配信確認
+- [x] 公開`config.js`にGoogle Maps APIキーがないことを確認
 
 ## iPhone実機確認
 
