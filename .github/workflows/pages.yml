@@ -9,6 +9,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  issues: write
 
 concurrency:
   group: pages
@@ -34,6 +35,23 @@ jobs:
              styles.css styles-*.css app.js app-*.js _site/
           cp icons/*.png _site/icons/
 
+      - name: Validate static site before deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s _site/index.html
+          test -s _site/manifest.webmanifest
+          test -s _site/service-worker.js
+          test -s _site/demo-key.html
+          test -s _site/privacy.html
+          test -s _site/terms.html
+          test -s _site/icons/apple-touch-icon.png
+          test -s _site/icons/icon-192.png
+          test -s _site/icons/icon-512.png
+          test -s _site/icons/icon-maskable-512.png
+          grep -q 'googleMapsApiKey: ""' _site/config.js
+          python3 -m json.tool _site/manifest.webmanifest >/dev/null
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
@@ -45,3 +63,109 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Smoke-test deployed site
+        id: smoke
+        if: steps.deployment.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -uo pipefail
+          base="${PAGE_URL%/}/"
+          report="$RUNNER_TEMP/dayscape-pages-smoke.md"
+          status=0
+
+          printf '%s\n\n' '## Dayscape Pages smoke test' > "$report"
+          printf -- '- URL: %s\n' "$base" >> "$report"
+          printf -- '- Commit: `%s`\n\n' "$GITHUB_SHA" >> "$report"
+
+          check_text() {
+            label="$1"
+            path="$2"
+            marker="$3"
+            target="$RUNNER_TEMP/check-$(echo "$path" | tr '/.' '--')"
+            if curl --fail --silent --show-error --location \
+              --retry 10 --retry-all-errors --retry-delay 3 \
+              "${base}${path}" -o "$target" && grep -Fq "$marker" "$target"; then
+              printf -- '- [x] %s\n' "$label" >> "$report"
+            else
+              printf -- '- [ ] %s\n' "$label" >> "$report"
+              status=1
+            fi
+          }
+
+          check_text 'App shell' '' '<title>Dayscape'
+          check_text 'Service Worker' 'service-worker.js' 'dayscape-shell-v1.2.0'
+          check_text 'Demo Key entry' 'demo-key.html' 'Google Placesを検証'
+          check_text 'Privacy Policy' 'privacy.html' 'プライバシーポリシー'
+          check_text 'Terms of Use' 'terms.html' '利用規約'
+
+          manifest="$RUNNER_TEMP/manifest.webmanifest"
+          if curl --fail --silent --show-error --location \
+            --retry 10 --retry-all-errors --retry-delay 3 \
+            "${base}manifest.webmanifest" -o "$manifest" \
+            && python3 -m json.tool "$manifest" >/dev/null \
+            && grep -Fq '"display": "standalone"' "$manifest"; then
+            printf -- '- [x] PWA manifest\n' >> "$report"
+          else
+            printf -- '- [ ] PWA manifest\n' >> "$report"
+            status=1
+          fi
+
+          runtime_config="$RUNNER_TEMP/config.js"
+          if curl --fail --silent --show-error --location \
+            --retry 10 --retry-all-errors --retry-delay 3 \
+            "${base}config.js" -o "$runtime_config" \
+            && grep -Eq 'googleMapsApiKey:[[:space:]]*""' "$runtime_config"; then
+            printf -- '- [x] Public config contains no Google Maps API key\n' >> "$report"
+          else
+            printf -- '- [ ] Public config API-key guard\n' >> "$report"
+            status=1
+          fi
+
+          cat "$report"
+          exit "$status"
+
+      - name: Post deployment result to issue
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_OUTCOME: ${{ steps.deployment.outcome }}
+          SMOKE_OUTCOME: ${{ steps.smoke.outcome }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          report="$RUNNER_TEMP/dayscape-pages-smoke.md"
+          body="$RUNNER_TEMP/deployment-comment.md"
+
+          if [[ -s "$report" ]]; then
+            cat "$report" > "$body"
+          else
+            printf '%s\n\n' '## Dayscape Pages deployment' > "$body"
+            printf -- '- Deployment: `%s`\n' "$DEPLOY_OUTCOME" >> "$body"
+            printf -- '- Smoke test: `%s`\n' "$SMOKE_OUTCOME" >> "$body"
+          fi
+
+          printf '\n- Workflow: %s\n' "$RUN_URL" >> "$body"
+          printf -- '- Page URL: %s\n' "${PAGE_URL:-not available}" >> "$body"
+
+          python3 - "$body" <<'PY' > "$RUNNER_TEMP/comment.json"
+          import json, pathlib, sys
+          print(json.dumps({"body": pathlib.Path(sys.argv[1]).read_text()}, ensure_ascii=False))
+          PY
+
+          curl --fail --silent --show-error --request POST \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/2/comments" \
+            --data-binary @"$RUNNER_TEMP/comment.json" >/dev/null
+
+      - name: Fail when deployed-site smoke test failed
+        if: steps.smoke.outcome == 'failure'
+        shell: bash
+        run: exit 1
