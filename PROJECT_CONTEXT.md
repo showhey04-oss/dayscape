@@ -6,7 +6,7 @@
 - Primary users: non-engineer couple in their 30s with a child
 - Primary device: iPhone
 - Current prototype lineage: single-file HTML calendar
-- Current implementation: Dayscape Calendar v1.2 public pilot
+- Current implementation: Dayscape Calendar v1.2.1 public pilot
 - Public URL: `https://showhey04-oss.github.io/dayscape/`
 
 ## 2. Product goal
@@ -40,11 +40,15 @@ The core product principle is:
 - Departure date/time
 - Category / color
 - Weather location
+- Place
 
 ### Date/time behavior
+- Timed events use separate visible date and time inputs on iPhone
+- Canonical persisted values remain `YYYY-MM-DDTHH:mm` for compatibility
 - New event departure date/time initially matches event start date/time
 - While departure time has not been manually edited, changes to start date/time also update departure time
 - After manual departure-time editing, automatic following stops
+- Departure date/time can be cleared with `設定しない`
 
 ### Weather
 - Multiple registered forecast locations
@@ -67,6 +71,7 @@ The core product principle is:
 - Minimal, refined, low visual noise
 - Natural contemporary Japanese
 - Avoid overly cute, artificial, or explanatory wording
+- Event sheets must not allow unintended horizontal scrolling
 - Prefer short labels such as:
   - 予定名
   - 開始
@@ -81,7 +86,7 @@ The core product principle is:
 - Week view provides moderate detail
 - Day view provides the highest information density
 
-## 5. Approved next direction
+## 5. Approved product behavior
 
 ### Place integration
 Add optional `場所` directly below event title.
@@ -125,13 +130,15 @@ No family/cloud synchronization is included yet.
 
 ## 7. Deferred features / roadmap
 
-### v1.2 public pilot
+### v1.2.1 public pilot
 - Google Places search
 - Google Maps deep/open link
 - PWA conversion
 - GitHub Pages deployment
 - Demo Key validation
 - Maintain v1.1 data compatibility
+- Prevent unintended horizontal scrolling in event sheets
+- Separate date/time controls for improved iPhone time visibility
 
 ### v1.3 candidate
 - Recurring events
@@ -166,9 +173,11 @@ Do not add unless separately approved:
 - Google Places integration should use a restricted browser API key.
 - Personal schedule data should remain off GitHub; GitHub stores application source only.
 - Complexity should only be added when it materially reduces daily family scheduling friction.
-- Human approval was granted on 2026-08-18 to publish the repository and the v1.2 public pilot through GitHub Pages.
+- Human approval was granted on 2026-08-18 to publish the repository and the public pilot through GitHub Pages.
 - The public pilot keeps `config.js` free of Google API keys; Demo Key input remains session-only until the production key is separately approved and restricted.
 - Deployment health is verified automatically after each `main` push and recorded in GitHub Issue #2.
+- The compound iOS `datetime-local` control was replaced by separate date/time inputs in v1.2.1 because the native picker made the time value easy to overlook.
+- The persisted event schema was not changed by the v1.2.1 date/time UI revision.
 
 ## 10. Development governance
 - This Project is the canonical workspace for Dayscape decisions.
@@ -183,7 +192,7 @@ Do not add unless separately approved:
   5. release/publication decisions.
 
 ## 11. Current state
-Status: v1.2 PUBLIC PILOT DEPLOYED / IPHONE VALIDATION PENDING
+Status: v1.2.1 PUBLIC PILOT DEPLOYED / IPHONE FIX RECHECK PENDING
 
 Completed:
 - Initial one-shot HTML prototype
@@ -195,7 +204,7 @@ Completed:
 - Date-tap creation
 - Departure-time initialization/follow behavior
 - Japanese UI revision
-- v1.2 place field, Google Places integration shell, Google Maps links, and PWA assets
+- Place field, Google Places integration shell, Google Maps links, and PWA assets
 - Google Places persistence model revised to Place ID-only for policy compliance
 - 390px iPhone-equivalent rendering QA
 - GitHub repository populated and published: `showhey04-oss/dayscape`
@@ -209,11 +218,16 @@ Completed:
 - Human approval granted to publish the repository and web application publicly
 - GitHub Pages deployed at `https://showhey04-oss.github.io/dayscape/`
 - Post-deployment checks passed for the app shell, Service Worker, PWA Manifest, Demo Key page, policies, and empty public API-key configuration
+- Physical iPhone validation passed for Safari rendering, event CRUD, date/time/departure behavior, Google Places suggestions, Google Maps launch, Home Screen installation, standalone display, and offline startup
+- v1.2.1 fixed unintended horizontal scrolling in the event sheet
+- v1.2.1 replaced compound datetime controls with separate date/time controls and larger time text
+- v1.2.1 local QA passed at 320 / 390 / 430 px, including save/reopen, cross-day end adjustment, departure follow/manual override, and forced oversized Google Places element containment
+- v1.2.1 GitHub Pages post-deployment smoke test passed
 
 Next major work:
-1. Validate Google Places with the Demo Key on a physical iPhone
-2. Complete the iPhone/PWA compatibility checklist
-3. Review and fix any real-device interaction or layout defects
+1. Recheck the two v1.2.1 fixes on a physical iPhone
+2. Validate Place ID persistence and place-name re-resolution after relaunch
+3. Restore a v1.1 backup and confirm save compatibility
 4. Decide whether the public pilot is ready to use as the normal family calendar
 5. Obtain and restrict a production Google Maps Platform browser key when Places should be enabled without session entry
 6. Replace Demo validation with the production key only after validation and cost controls
