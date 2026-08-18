@@ -40,6 +40,8 @@ function renderPlaceFallback(message = "場所検索のAPIキーが未設定で�
   els.eventPlaceNote.textContent = message;
 }
 
+const failedGooglePlaceResolutions = new Set();
+
 function cacheGooglePlaceDetails(place) {
   const placeId = cleanText(place?.id || place?.placeId, 240);
   if (!placeId) return null;
@@ -55,6 +57,7 @@ function cacheGooglePlaceDetails(place) {
     longitude: Number.isFinite(longitude) ? longitude : null,
     attributions: googlePlaceAttributionData(place)
   };
+  failedGooglePlaceResolutions.delete(placeId);
   resolvedGooglePlaces.set(placeId, details);
   return details;
 }
@@ -63,6 +66,7 @@ async function resolveGooglePlace(placeId) {
   const id = cleanText(placeId, 240);
   if (!id || !googlePlacesReady || !window.google?.maps?.places?.Place) return null;
   if (resolvedGooglePlaces.has(id)) return resolvedGooglePlaces.get(id);
+  if (failedGooglePlaceResolutions.has(id)) return null;
   if (googlePlaceResolveInFlight.has(id)) return googlePlaceResolveInFlight.get(id);
   const promise = (async () => {
     try {
@@ -70,6 +74,7 @@ async function resolveGooglePlace(placeId) {
       await place.fetchFields({ fields: ["id", "displayName", "formattedAddress", "location"] });
       return cacheGooglePlaceDetails(place);
     } catch (error) {
+      failedGooglePlaceResolutions.add(id);
       console.warn("Dayscape: saved place could not be resolved.", error);
       return null;
     } finally {
@@ -111,7 +116,7 @@ function visibleGooglePlaceIds() {
 async function resolveGooglePlacesForVisibleEvents() {
   if (!googlePlacesReady || state.settings.view === "month") return;
   if (visibleGooglePlaceResolutionPromise) return visibleGooglePlaceResolutionPromise;
-  const unresolved = visibleGooglePlaceIds().filter(id => !resolvedGooglePlaces.has(id));
+  const unresolved = visibleGooglePlaceIds().filter(id => !resolvedGooglePlaces.has(id) && !failedGooglePlaceResolutions.has(id));
   if (!unresolved.length) return;
 
   const promise = Promise.all(unresolved.map(resolveGooglePlace));
