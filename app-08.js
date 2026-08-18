@@ -52,6 +52,7 @@ function ensureAppInfoSection() {
       </div>
     </div>
     <div class="attribution">
+      <a href="./demo-key.html">Google Placesを検証</a> ·
       <a href="./privacy.html">プライバシーポリシー</a> ·
       <a href="./terms.html">利用規約</a> ·
       <a href="https://github.com/showhey04-oss/dayscape/issues" target="_blank" rel="noopener noreferrer">フィードバック</a>
