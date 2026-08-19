@@ -8,7 +8,8 @@
     "./app-05.js",
     "./app-06.js",
     "./app-07.js",
-    "./app-08.js"
+    "./app-08.js",
+    "./app-09.js"
   ];
   for (const src of chunks) {
     await new Promise((resolve, reject) => {
