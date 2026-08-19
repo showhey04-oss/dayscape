@@ -130,10 +130,6 @@ let eventPlaceDraft = null;
 let eventPlaceAutocomplete = null;
 let eventPlaceFallbackInput = null;
 let googlePlacesReady = false;
-let eventPlaceViewportFixed = false;
-let eventPlaceViewportScrollY = 0;
-let eventPlaceViewportSheetScrollTop = 0;
-let eventPlaceViewportTimers = [];
 const resolvedGooglePlaces = new Map();
 const googlePlaceResolveInFlight = new Map();
 
@@ -187,7 +183,6 @@ els.eventPlaceChange.addEventListener("click", () => {
   if (eventPlaceFallbackInput) eventPlaceFallbackInput.focus();
   else if (eventPlaceAutocomplete?.focus) eventPlaceAutocomplete.focus();
 });
-installEventPlaceViewportFix();
 
 document.querySelectorAll('[data-close-sheet="event"]').forEach(button => button.addEventListener("click", closeEventSheet));
 document.querySelectorAll('[data-close-sheet="settings"]').forEach(button => button.addEventListener("click", closeSettingsSheet));
