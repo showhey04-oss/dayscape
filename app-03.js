@@ -1,4 +1,84 @@
 "use strict";
+function clearEventPlaceViewportTimers() {
+  eventPlaceViewportTimers.forEach(timer => clearTimeout(timer));
+  eventPlaceViewportTimers = [];
+}
+
+function updateEventPlaceViewportPosition() {
+  if (!eventPlaceViewportFixed || !els.eventSheet.classList.contains("is-open")) return;
+  const viewport = window.visualViewport;
+  const viewportLeft = viewport?.offsetLeft || 0;
+  const viewportTop = viewport?.offsetTop || 0;
+  const viewportWidth = viewport?.width || document.documentElement.clientWidth;
+  const sheet = els.eventSheet.querySelector(".sheet");
+  const sheetRect = sheet?.getBoundingClientRect();
+  const sideGap = 17;
+  const availableWidth = Math.max(0, viewportWidth - sideGap * 2);
+  const width = Math.min(sheetRect?.width ? sheetRect.width - sideGap * 2 : availableWidth, availableWidth);
+  const left = Math.max(viewportLeft + sideGap, Math.min(
+    (sheetRect?.left || viewportLeft) + sideGap,
+    viewportLeft + viewportWidth - width - sideGap
+  ));
+
+  els.eventPlaceSearchHost.style.setProperty("--place-viewport-left", `${left}px`);
+  els.eventPlaceSearchHost.style.setProperty("--place-viewport-top", `${viewportTop + 12}px`);
+  els.eventPlaceSearchHost.style.setProperty("--place-viewport-width", `${width}px`);
+}
+
+function correctEventPlaceSafariScroll() {
+  if (!eventPlaceViewportFixed) return;
+  const sheetBody = els.eventSheet.querySelector(".sheet-body");
+  window.scrollTo(window.scrollX, eventPlaceViewportScrollY);
+  if (sheetBody) sheetBody.scrollTop = eventPlaceViewportSheetScrollTop;
+  updateEventPlaceViewportPosition();
+}
+
+function fixEventPlaceToVisualViewport() {
+  if (!els.eventSheet.classList.contains("is-open")) return;
+  const sheetBody = els.eventSheet.querySelector(".sheet-body");
+  if (!eventPlaceViewportFixed) {
+    eventPlaceViewportScrollY = window.scrollY;
+    eventPlaceViewportSheetScrollTop = sheetBody?.scrollTop || 0;
+    eventPlaceViewportFixed = true;
+    els.eventPlaceSearchHost.classList.add("is-viewport-fixed");
+  }
+  clearEventPlaceViewportTimers();
+  [0, 80, 240].forEach(delay => {
+    eventPlaceViewportTimers.push(setTimeout(correctEventPlaceSafariScroll, delay));
+  });
+}
+
+function releaseEventPlaceViewportFix() {
+  if (!eventPlaceViewportFixed) return;
+  clearEventPlaceViewportTimers();
+  eventPlaceViewportFixed = false;
+  els.eventPlaceSearchHost.classList.remove("is-viewport-fixed");
+  els.eventPlaceSearchHost.style.removeProperty("--place-viewport-left");
+  els.eventPlaceSearchHost.style.removeProperty("--place-viewport-top");
+  els.eventPlaceSearchHost.style.removeProperty("--place-viewport-width");
+}
+
+function installEventPlaceViewportFix() {
+  els.eventPlaceSearchHost.addEventListener("pointerdown", fixEventPlaceToVisualViewport);
+  els.eventPlaceSearchHost.addEventListener("focusin", fixEventPlaceToVisualViewport);
+  els.eventPlaceSearchHost.addEventListener("focusout", () => {
+    setTimeout(() => {
+      if (!els.eventPlaceSearchHost.matches(":focus-within")) releaseEventPlaceViewportFix();
+    }, 0);
+  });
+  els.eventSheet.addEventListener("focusin", event => {
+    if (!els.eventPlaceSearchHost.contains(event.target) && event.target !== eventPlaceAutocomplete) {
+      releaseEventPlaceViewportFix();
+    }
+  });
+  window.visualViewport?.addEventListener("resize", () => {
+    if (eventPlaceViewportFixed) correctEventPlaceSafariScroll();
+  });
+  window.visualViewport?.addEventListener("scroll", () => {
+    if (eventPlaceViewportFixed) correctEventPlaceSafariScroll();
+  });
+}
+
 function renderEventPlaceSelection() {
   const place = eventPlaceDraft;
   els.eventPlaceSelected.hidden = !place || place.source === "text";
@@ -160,6 +240,7 @@ async function initializeEventPlaceSearch() {
     autocomplete.placeholder = "施設名・住所を検索";
     autocomplete.style.width = "100%";
     autocomplete.addEventListener("gmp-select", async ({ placePrediction }) => {
+      releaseEventPlaceViewportFix();
       try {
         const place = placePrediction.toPlace();
         await place.fetchFields({ fields: ["id", "displayName", "formattedAddress", "location"] });
@@ -235,6 +316,7 @@ function openEventSheet(eventId = null, preferredDateKey = dateKey(anchorDate)) 
 }
 
 function closeEventSheet() {
+  releaseEventPlaceViewportFix();
   closeSheet(els.eventSheet);
   editingEventId = null;
   departureFollowsStart = false;
