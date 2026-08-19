@@ -30,6 +30,17 @@
       min-height: 48px;
     }
 
+    .place-search-host.is-viewport-fixed {
+      position: fixed;
+      z-index: 140;
+      top: var(--place-viewport-top);
+      left: var(--place-viewport-left);
+      width: var(--place-viewport-width);
+      max-width: calc(100vw - 34px);
+      overflow: visible;
+      isolation: isolate;
+    }
+
     .place-search-host > *,
     .place-search-host gmp-place-autocomplete {
       display: block;
