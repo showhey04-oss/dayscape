@@ -23,6 +23,25 @@
       letter-spacing: -0.02em;
     }
 
+    .event-place-field {
+      position: relative;
+      z-index: 1;
+      scroll-margin-block-start: 8px;
+    }
+
+    #eventSheet.is-place-searching .event-place-field {
+      position: sticky;
+      top: 0;
+      z-index: 32;
+      padding: 8px 0 10px;
+      background: var(--surface);
+      box-shadow: 0 14px 18px -20px rgba(39, 43, 37, 0.55);
+    }
+
+    #eventSheet.is-place-searching .sheet-body {
+      scroll-padding-block-start: 8px;
+    }
+
     .place-search-host {
       width: 100%;
       min-width: 0;

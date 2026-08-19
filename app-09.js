@@ -12,6 +12,7 @@
 
   function revealSearchControl(target) {
     if (!target?.isConnected) return;
+    if (target.classList.contains("has-sheet-scroll-guard")) return;
     const sheet = target.closest(".sheet-layer");
     if (!sheet?.classList.contains("is-open")) return;
     target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });

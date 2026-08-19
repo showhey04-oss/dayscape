@@ -1,4 +1,100 @@
 "use strict";
+let eventPlaceVisibilityField = null;
+let eventPlaceVisibilityBody = null;
+let eventPlaceVisibilityActive = false;
+let eventPlaceVisibilityTimers = [];
+let eventPlaceVisibilityInstalled = false;
+
+function ensureEventPlaceVisibilityElements() {
+  if (!els?.eventPlaceSearchHost || !els?.eventSheet) return false;
+  eventPlaceVisibilityField ||= els.eventPlaceSearchHost.closest(".field-group");
+  eventPlaceVisibilityBody ||= els.eventPlaceSearchHost.closest(".sheet-body");
+  if (eventPlaceVisibilityField) eventPlaceVisibilityField.classList.add("event-place-field");
+  els.eventPlaceSearchHost.classList.add("has-sheet-scroll-guard");
+  return Boolean(eventPlaceVisibilityField && eventPlaceVisibilityBody);
+}
+
+function clearEventPlaceVisibilityTimers() {
+  eventPlaceVisibilityTimers.forEach(timer => clearTimeout(timer));
+  eventPlaceVisibilityTimers = [];
+}
+
+function alignEventPlaceWithinSheet() {
+  if (!eventPlaceVisibilityActive || !ensureEventPlaceVisibilityElements()) return;
+  if (!els.eventSheet.classList.contains("is-open")) return;
+
+  const bodyRect = eventPlaceVisibilityBody.getBoundingClientRect();
+  const fieldRect = eventPlaceVisibilityField.getBoundingClientRect();
+  const targetTop = bodyRect.top + 8;
+  const delta = fieldRect.top - targetTop;
+  if (Math.abs(delta) <= 1) return;
+
+  const maxScroll = Math.max(0, eventPlaceVisibilityBody.scrollHeight - eventPlaceVisibilityBody.clientHeight);
+  const nextScroll = Math.max(0, Math.min(maxScroll, eventPlaceVisibilityBody.scrollTop + delta));
+  eventPlaceVisibilityBody.scrollTop = nextScroll;
+}
+
+function scheduleEventPlaceVisibilityAlignment() {
+  if (!eventPlaceVisibilityActive) return;
+  clearEventPlaceVisibilityTimers();
+  [0, 80, 220, 420].forEach(delay => {
+    eventPlaceVisibilityTimers.push(setTimeout(() => {
+      requestAnimationFrame(alignEventPlaceWithinSheet);
+    }, delay));
+  });
+}
+
+function activateEventPlaceVisibilityGuard() {
+  if (!ensureEventPlaceVisibilityElements()) return;
+  if (!els.eventSheet.classList.contains("is-open")) return;
+  eventPlaceVisibilityActive = true;
+  els.eventSheet.classList.add("is-place-searching");
+  scheduleEventPlaceVisibilityAlignment();
+}
+
+function deactivateEventPlaceVisibilityGuard() {
+  eventPlaceVisibilityActive = false;
+  clearEventPlaceVisibilityTimers();
+  els?.eventSheet?.classList.remove("is-place-searching");
+}
+
+function eventTargetsPlaceField(event) {
+  if (!ensureEventPlaceVisibilityElements()) return false;
+  const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+  return path.includes(eventPlaceVisibilityField)
+    || path.includes(els.eventPlaceSearchHost)
+    || eventPlaceVisibilityField.contains(event.target);
+}
+
+function bindEventPlaceVisibilityControl(control) {
+  if (!control || control.dataset?.dayscapeSheetScrollGuard === "true") return;
+  if (control.dataset) control.dataset.dayscapeSheetScrollGuard = "true";
+  ["pointerdown", "focus", "focusin", "click", "input"].forEach(type => {
+    control.addEventListener(type, activateEventPlaceVisibilityGuard, true);
+  });
+}
+
+function installEventPlaceVisibilityGuard() {
+  if (eventPlaceVisibilityInstalled || !ensureEventPlaceVisibilityElements()) return;
+  eventPlaceVisibilityInstalled = true;
+
+  els.eventSheet.addEventListener("pointerdown", event => {
+    if (eventPlaceVisibilityActive && !eventTargetsPlaceField(event)) {
+      deactivateEventPlaceVisibilityGuard();
+    }
+  }, true);
+
+  els.eventSheet.addEventListener("focusin", event => {
+    if (eventPlaceVisibilityActive && !eventTargetsPlaceField(event)) {
+      deactivateEventPlaceVisibilityGuard();
+    }
+  }, true);
+
+  const handleViewportResize = () => scheduleEventPlaceVisibilityAlignment();
+  window.visualViewport?.addEventListener("resize", handleViewportResize);
+  window.addEventListener("resize", handleViewportResize);
+}
+
 function renderEventPlaceSelection() {
   const place = eventPlaceDraft;
   els.eventPlaceSelected.hidden = !place || place.source === "text";
@@ -30,6 +126,7 @@ function renderPlaceFallback(message = "場所検索のAPIキーが未設定で�
   eventPlaceAutocomplete = null;
   els.eventPlaceSearchHost.innerHTML = `<input class="text-input place-fallback-input" id="eventPlaceFallback" type="text" maxlength="160" autocomplete="street-address" placeholder="施設名・住所を入力" />`;
   eventPlaceFallbackInput = document.getElementById("eventPlaceFallback");
+  bindEventPlaceVisibilityControl(eventPlaceFallbackInput);
   eventPlaceFallbackInput.value = eventPlaceDraft?.source === "text" ? eventPlaceDraft.name : "";
   eventPlaceFallbackInput.addEventListener("input", () => {
     if (eventPlaceDraft && (eventPlaceDraft.source !== "text" || eventPlaceFallbackInput.value !== eventPlaceDraft.name)) {
@@ -149,6 +246,7 @@ function loadGoogleMapsScript(apiKey) {
 }
 
 async function initializeEventPlaceSearch() {
+  installEventPlaceVisibilityGuard();
   if (!GOOGLE_MAPS_API_KEY) {
     renderPlaceFallback();
     return;
@@ -159,6 +257,7 @@ async function initializeEventPlaceSearch() {
     const autocomplete = new PlaceAutocompleteElement({ includedRegionCodes: ["jp"] });
     autocomplete.placeholder = "施設名・住所を検索";
     autocomplete.style.width = "100%";
+    bindEventPlaceVisibilityControl(autocomplete);
     autocomplete.addEventListener("gmp-select", async ({ placePrediction }) => {
       try {
         const place = placePrediction.toPlace();
@@ -166,6 +265,7 @@ async function initializeEventPlaceSearch() {
         const details = cacheGooglePlaceDetails(place);
         setEventPlaceDraft(details);
         try { autocomplete.value = ""; } catch (_) {}
+        deactivateEventPlaceVisibilityGuard();
       } catch (error) {
         console.warn("Dayscape: place details could not be read.", error);
         showToast("場所の情報を取得できませんでした");
@@ -235,6 +335,7 @@ function openEventSheet(eventId = null, preferredDateKey = dateKey(anchorDate)) 
 }
 
 function closeEventSheet() {
+  deactivateEventPlaceVisibilityGuard();
   closeSheet(els.eventSheet);
   editingEventId = null;
   departureFollowsStart = false;
