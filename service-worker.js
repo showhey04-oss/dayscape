@@ -1,4 +1,4 @@
-const CACHE_NAME = "dayscape-shell-v1.2.4";
+const CACHE_NAME = "dayscape-shell-v1.2.5";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,6 +15,7 @@ const APP_SHELL = [
   "./app-06.js",
   "./app-07.js",
   "./app-08.js",
+  "./app-09.js",
   "./styles.css",
   "./styles-01.css",
   "./styles-02.css",
