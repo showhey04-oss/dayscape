@@ -3,3 +3,14 @@
 @import url("./styles-03.css");
 @import url("./styles-04.css");
 @import url("./styles-05.css");
+
+/* iPhone Safari: keep search fields at 16px or larger to prevent focus zoom/pan. */
+.search-input {
+  font-size: 16px;
+}
+
+/* Google PlaceAutocompleteElement exposes its internal input as a CSS shadow part. */
+.place-search-host gmp-place-autocomplete,
+.place-search-host gmp-place-autocomplete::part(input) {
+  font-size: 16px;
+}
