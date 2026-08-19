@@ -83,6 +83,7 @@
 
     let gesture = null;
     let settleTimer = 0;
+    let swipeClosing = false;
 
     function clearSettleTimer() {
       if (!settleTimer) return;
@@ -113,6 +114,17 @@
       settleTimer = window.setTimeout(resetInlineStyles, SNAP_DURATION + 40);
     }
 
+    function preserveClosedSwipeStyles() {
+      clearSettleTimer();
+      gesture = null;
+      layer.classList.remove("is-swipe-dragging");
+      sheet.style.removeProperty("transition");
+      sheet.style.removeProperty("will-change");
+      if (backdrop instanceof HTMLElement) {
+        backdrop.style.removeProperty("transition");
+      }
+    }
+
     function requestClose(distance) {
       const active = document.activeElement;
       if (active instanceof HTMLElement && layer.contains(active)) active.blur();
@@ -128,10 +140,21 @@
       }
 
       settleTimer = window.setTimeout(() => {
+        settleTimer = 0;
+        swipeClosing = true;
         const closeTrigger = layer.querySelector("[data-close-sheet]");
         if (closeTrigger instanceof HTMLElement) closeTrigger.click();
         else layer.classList.remove("is-open");
-        resetInlineStyles();
+
+        // Keep the off-screen transform/opacity after swipe-close.
+        // Resetting them immediately can make iOS Safari composite the sheet
+        // on-screen for one frame before the layer fully disappears.
+        preserveClosedSwipeStyles();
+
+        window.setTimeout(() => {
+          swipeClosing = false;
+          if (layer.classList.contains("is-open")) resetInlineStyles();
+        }, 0);
       }, duration + 20);
     }
 
@@ -208,8 +231,25 @@
     window.addEventListener("pointercancel", event => finishGesture(event, true));
     layer.addEventListener("click", event => {
       const target = event.target;
-      if (target instanceof Element && target.closest("[data-close-sheet]")) resetInlineStyles();
+      if (
+        !swipeClosing
+        && target instanceof Element
+        && target.closest("[data-close-sheet]")
+      ) {
+        resetInlineStyles();
+      }
     }, true);
+
+    let wasOpen = layer.classList.contains("is-open");
+    const openStateObserver = new MutationObserver(() => {
+      const isOpen = layer.classList.contains("is-open");
+      if (isOpen && !wasOpen && !swipeClosing) {
+        // Clear stale swipe-close inline styles immediately before repainting.
+        resetInlineStyles();
+      }
+      wasOpen = isOpen;
+    });
+    openStateObserver.observe(layer, { attributes: true, attributeFilter: ["class"] });
   }
 
   function installAllSheetSwipeDismiss() {
